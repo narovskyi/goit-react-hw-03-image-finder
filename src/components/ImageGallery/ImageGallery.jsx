@@ -23,7 +23,10 @@ class ImageGallery extends Component {
 
     render() {
         return (
-            <h1>{this.props.searchPhrase}</h1>
+            <>
+                <h1>{this.props.searchPhrase}</h1>
+                <Gallery />
+            </>
         );
     }
 }
