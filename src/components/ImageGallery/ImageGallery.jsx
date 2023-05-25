@@ -1,9 +1,11 @@
 import { Component } from "react";
 import { Gallery } from "./ImageGallery.styled";
+import ImageGalleryItem from "components/ImgaeGalleryItem/";
 
 class ImageGallery extends Component {
     state = {
-        galleryItems: []
+        galleryItems: [],
+        status: 'idle'
     }
 
     componentDidUpdate(prevProps) {
@@ -21,11 +23,20 @@ class ImageGallery extends Component {
         }
     }
 
+    // 'idle'
+    // 'pending'
+    // 'resolved'
+    // 'loaded more'
+    // 'error'
+
     render() {
         return (
             <>
-                <h1>{this.props.searchPhrase}</h1>
-                <Gallery />
+                <Gallery>
+                    {this.state.galleryItems.map(({id, largeImageURL, webformatURL }) => {
+                        return <ImageGalleryItem key={ id } largeImage={ largeImageURL } smallImage={ webformatURL } />
+                    })}
+                </Gallery>
             </>
         );
     }
