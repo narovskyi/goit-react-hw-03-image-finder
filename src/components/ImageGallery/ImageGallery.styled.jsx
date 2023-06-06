@@ -12,3 +12,8 @@ export const Gallery = styled.ul`
     margin-left: auto;
     margin-right: auto;
 `;
+
+export const Heading = styled.h1`
+    text-align: center;
+    color: #757575;
+`;
