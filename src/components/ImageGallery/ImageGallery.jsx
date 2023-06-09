@@ -2,31 +2,70 @@ import { Component } from "react";
 import { Gallery, Heading } from "./ImageGallery.styled";
 import ImageGalleryItem from "components/ImgaeGalleryItem/";
 import Loader from "components/Loader/";
+import LoadMoreButton from "components/LoadMoreButton";
+import api from 'services/api'
 
 class ImageGallery extends Component {
     state = {
         galleryItems: [],
-        status: 'idle'
+        status: 'idle',
+        page: 1
     }
 
-    componentDidUpdate(prevProps) {
+    async componentDidUpdate(prevProps, prevState) {
         const prevSearchPhrase = prevProps.searchPhrase;
-        const nextSearchPhrase = this.props.searchPhrase;
+        const currentSearchPhrase = this.props.searchPhrase;
 
-        if (prevSearchPhrase !== nextSearchPhrase) {
+        if (prevState.page !== this.state.page) {
+            console.log('page changed');
+            console.log('змінений пейдж в стейті: ', this.state.page);
+            const photos = await api.fetchPhoto(this.state.page, currentSearchPhrase);
+            this.setState({
+                galleryItems: [...this.state.galleryItems, ...photos],
+                status: 'resolved'
+            })
+        }
+
+        if (prevSearchPhrase !== currentSearchPhrase) {
             console.log('Пошукова фраза змінилась');
             console.log(this.state.galleryItems);
             this.setState({
-                status: 'pending'
+                status: 'pending',
             });
-            fetch(`https://pixabay.com/api/?q=${nextSearchPhrase}&page=1&key=32074254-ec575441b41af33a027107547&image_type=photo&orientation=horizontal&per_page=12`)
-                .then(res => res.json())
-                .then(result => this.setState({
-                    galleryItems: [...result.hits],
-                    status: 'resolved'
-                })
-            );            
+            console.log('поточний page в стейті: ', this.state.page);
+            const photos = await api.fetchPhoto(1, currentSearchPhrase);
+            this.setState({
+                galleryItems: [...photos],
+                status: 'resolved'
+            })    
         }
+
+        // if (prevSearchPhrase !== currentSearchPhrase || prevState.page !== this.state.page) {
+        //     console.log('page changed');
+        //     console.log('пейдж в стейті: ', this.state.page);
+        //     const photos = await api.fetchPhoto(this.state.page, currentSearchPhrase);
+        //     if (prevSearchPhrase !== currentSearchPhrase) {
+        //         this.setState({
+        //             galleryItems: [...photos],
+        //             status: 'resolved',
+        //             page: 1
+        //         })
+        //     }
+        //     if (prevState.page !== this.state.page) {
+        //         this.setState({
+        //             galleryItems: [...this.state.galleryItems, ...photos],
+        //             status: 'resolved'
+        //         })
+        //     }
+        // }
+
+    }
+
+    handleButtonClick = () => {
+        console.log('button pressed');
+        this.setState({
+            page: this.state.page + 1
+        });
     }
 
     // 'idle'
@@ -58,6 +97,7 @@ class ImageGallery extends Component {
                         return <ImageGalleryItem key={ id } largeImage={ largeImageURL } smallImage={ webformatURL } />
                     })}
                 </Gallery>
+                <LoadMoreButton onClick={this.handleButtonClick}/>
             </>
             );
         }
