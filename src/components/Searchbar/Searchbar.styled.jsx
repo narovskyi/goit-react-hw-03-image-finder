@@ -64,7 +64,7 @@ export const SearchInput = styled.input`
     display: inline-block;
     width: 100%;
     font: inherit;
-    font-size: 20px;
+    font-size: 18px;
     border: none;
     outline: none;
     padding-left: 4px;

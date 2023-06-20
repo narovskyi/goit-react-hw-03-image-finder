@@ -9,7 +9,8 @@ class ImageGallery extends Component {
     state = {
         galleryItems: [],
         status: 'idle',
-        page: 1
+        page: 1,
+        showModal: false
     }
 
     async componentDidUpdate(prevProps, prevState) {
@@ -17,8 +18,9 @@ class ImageGallery extends Component {
         const currentSearchPhrase = this.props.searchPhrase;
 
         if (prevState.page !== this.state.page) {
-            console.log('page changed');
-            console.log('змінений пейдж в стейті: ', this.state.page);
+            if (this.state.page === 1) {
+                return;
+            }
             const photos = await api.fetchPhoto(this.state.page, currentSearchPhrase);
             this.setState({
                 galleryItems: [...this.state.galleryItems, ...photos],
@@ -27,55 +29,33 @@ class ImageGallery extends Component {
         }
 
         if (prevSearchPhrase !== currentSearchPhrase) {
-            console.log('Пошукова фраза змінилась');
-            console.log(this.state.galleryItems);
             this.setState({
                 status: 'pending',
             });
-            console.log('поточний page в стейті: ', this.state.page);
             const photos = await api.fetchPhoto(1, currentSearchPhrase);
             this.setState({
                 galleryItems: [...photos],
-                status: 'resolved'
+                status: 'resolved',
+                page: 1
             })    
         }
-
-        // if (prevSearchPhrase !== currentSearchPhrase || prevState.page !== this.state.page) {
-        //     console.log('page changed');
-        //     console.log('пейдж в стейті: ', this.state.page);
-        //     const photos = await api.fetchPhoto(this.state.page, currentSearchPhrase);
-        //     if (prevSearchPhrase !== currentSearchPhrase) {
-        //         this.setState({
-        //             galleryItems: [...photos],
-        //             status: 'resolved',
-        //             page: 1
-        //         })
-        //     }
-        //     if (prevState.page !== this.state.page) {
-        //         this.setState({
-        //             galleryItems: [...this.state.galleryItems, ...photos],
-        //             status: 'resolved'
-        //         })
-        //     }
-        // }
-
     }
 
     handleButtonClick = () => {
-        console.log('button pressed');
         this.setState({
             page: this.state.page + 1
         });
     }
 
-    // 'idle'
-    // 'pending'
-    // 'resolved'
-    // 'loaded more'
-    // 'error'
+    toggleModal = () => {
+        this.setState(({ showModal }) => ({
+            showModal: !showModal
+        }));
+        console.log(this.state.showModal);
+    }
 
     render() {
-        const { status } = this.state
+        const { status, galleryItems } = this.state
         
         if (status === 'idle') {
             return (
@@ -93,8 +73,8 @@ class ImageGallery extends Component {
             return (
             <>
                 <Gallery>
-                    {this.state.galleryItems.map(({id, largeImageURL, webformatURL }) => {
-                        return <ImageGalleryItem key={ id } largeImage={ largeImageURL } smallImage={ webformatURL } />
+                    {galleryItems.map(({id, largeImageURL, webformatURL }) => {
+                        return <ImageGalleryItem key={id} largeImage={largeImageURL} smallImage={webformatURL} onClick={this.toggleModal} />
                     })}
                 </Gallery>
                 <LoadMoreButton onClick={this.handleButtonClick}/>
