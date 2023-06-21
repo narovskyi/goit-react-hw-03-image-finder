@@ -3,6 +3,7 @@ import { Gallery, Heading } from "./ImageGallery.styled";
 import ImageGalleryItem from "components/ImgaeGalleryItem/";
 import Loader from "components/Loader/";
 import LoadMoreButton from "components/LoadMoreButton";
+import Modal from "components/Modal";
 import api from 'services/api'
 
 class ImageGallery extends Component {
@@ -33,6 +34,7 @@ class ImageGallery extends Component {
                 status: 'pending',
             });
             const photos = await api.fetchPhoto(1, currentSearchPhrase);
+            console.log(photos[0].webformatURL);
             this.setState({
                 galleryItems: [...photos],
                 status: 'resolved',
@@ -55,7 +57,7 @@ class ImageGallery extends Component {
     }
 
     render() {
-        const { status, galleryItems } = this.state
+        const { status, galleryItems, showModal } = this.state
         
         if (status === 'idle') {
             return (
@@ -74,10 +76,11 @@ class ImageGallery extends Component {
             <>
                 <Gallery>
                     {galleryItems.map(({id, largeImageURL, webformatURL }) => {
-                        return <ImageGalleryItem key={id} largeImage={largeImageURL} smallImage={webformatURL} onClick={this.toggleModal} />
+                        return <ImageGalleryItem key={id} largeImage={largeImageURL} smallImage={webformatURL} onClick={this.toggleModal} showModal={showModal} />
                     })}
                 </Gallery>
-                <LoadMoreButton onClick={this.handleButtonClick}/>
+                {showModal && <Modal><img src={largeImage} alt="" /></Modal>}
+                <LoadMoreButton onClick={this.handleButtonClick} />
             </>
             );
         }
