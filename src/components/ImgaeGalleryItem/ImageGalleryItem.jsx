@@ -1,9 +1,8 @@
 import { ListItem, Image } from "./ImageGalleryItem.styled";
-import Modal from "components/Modal";
 
-const ImageGalleryItem = ({ largeImage, smallImage, onClick, showModal }) => (
+const ImageGalleryItem = ({ largeImage, smallImage, onClick }) => (
     <ListItem>
-        <Image src={smallImage} onClick={onClick} />
+        <Image src={smallImage} onClick={onClick} data-image={largeImage} />
     </ListItem>
 );
 

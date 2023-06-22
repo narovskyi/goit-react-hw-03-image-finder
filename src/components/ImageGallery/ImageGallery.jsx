@@ -5,13 +5,15 @@ import Loader from "components/Loader/";
 import LoadMoreButton from "components/LoadMoreButton";
 import Modal from "components/Modal";
 import api from 'services/api'
+import PropTypes from 'prop-types';
 
 class ImageGallery extends Component {
     state = {
         galleryItems: [],
         status: 'idle',
         page: 1,
-        showModal: false
+        showModal: false,
+        imageInModal: ''
     }
 
     async componentDidUpdate(prevProps, prevState) {
@@ -34,7 +36,6 @@ class ImageGallery extends Component {
                 status: 'pending',
             });
             const photos = await api.fetchPhoto(1, currentSearchPhrase);
-            console.log(photos[0].webformatURL);
             this.setState({
                 galleryItems: [...photos],
                 status: 'resolved',
@@ -49,15 +50,22 @@ class ImageGallery extends Component {
         });
     }
 
-    toggleModal = () => {
+    closeModal = () => {
         this.setState(({ showModal }) => ({
-            showModal: !showModal
+            showModal: false,
+            imageInModal: ''
         }));
-        console.log(this.state.showModal);
+    }
+
+    handleImageClick = (e) => {
+        this.setState(({ showModal }) => ({
+            showModal: true,
+            imageInModal: e.target.dataset.image
+        }))
     }
 
     render() {
-        const { status, galleryItems, showModal } = this.state
+        const { status, galleryItems, showModal, imageInModal } = this.state
         
         if (status === 'idle') {
             return (
@@ -76,15 +84,19 @@ class ImageGallery extends Component {
             <>
                 <Gallery>
                     {galleryItems.map(({id, largeImageURL, webformatURL }) => {
-                        return <ImageGalleryItem key={id} largeImage={largeImageURL} smallImage={webformatURL} onClick={this.toggleModal} showModal={showModal} />
+                        return <ImageGalleryItem key={id} largeImage={largeImageURL} smallImage={webformatURL} onClick={this.handleImageClick} />
                     })}
                 </Gallery>
-                {showModal && <Modal><img src={largeImage} alt="" /></Modal>}
+                    {showModal && <Modal onClose={this.closeModal}><img src={imageInModal} alt="" /></Modal>}
                 <LoadMoreButton onClick={this.handleButtonClick} />
             </>
             );
         }
     }
+}
+
+ImageGallery.propTypes = {
+    searchPhrase: PropTypes.string.isRequired
 }
 
 export default ImageGallery;
