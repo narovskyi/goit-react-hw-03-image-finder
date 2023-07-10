@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { Gallery, Heading } from "./ImageGallery.styled";
+import { Gallery, Heading, Image } from "./ImageGallery.styled";
 import ImageGalleryItem from "components/ImgaeGalleryItem/";
 import Loader from "components/Loader/";
 import LoadMoreButton from "components/LoadMoreButton";
@@ -13,7 +13,10 @@ class ImageGallery extends Component {
         status: 'idle',
         page: 1,
         showModal: false,
-        imageInModal: ''
+        imageInModal: {
+            imageUrl: '',
+            altImageText: ''
+        }
     }
 
     async componentDidUpdate(prevProps, prevState) {
@@ -22,25 +25,58 @@ class ImageGallery extends Component {
 
         if (prevState.page !== this.state.page) {
             if (this.state.page === 1) {
-                return;
+                    return;
+                }
+            try {
+                const photos = await api.fetchPhoto(this.state.page, currentSearchPhrase);
+                if (photos.length < 12 && photos.length >= 0) {
+                    this.setState({
+                        galleryItems: [...this.state.galleryItems, ...photos],
+                        status: 'last page'
+                    })
+                } else {
+                    this.setState({
+                    galleryItems: [...this.state.galleryItems, ...photos],
+                    status: 'resolved'
+                })
+                }
+            } catch (error) {
+                this.setState({
+                    galleryItems: [],
+                    status: 'error',
+                })            
             }
-            const photos = await api.fetchPhoto(this.state.page, currentSearchPhrase);
-            this.setState({
-                galleryItems: [...this.state.galleryItems, ...photos],
-                status: 'resolved'
-            })
         }
 
         if (prevSearchPhrase !== currentSearchPhrase) {
             this.setState({
                 status: 'pending',
             });
-            const photos = await api.fetchPhoto(1, currentSearchPhrase);
-            this.setState({
-                galleryItems: [...photos],
-                status: 'resolved',
-                page: 1
-            })    
+            try {
+                const photos = await api.fetchPhoto(1, currentSearchPhrase);
+                if (photos.length === 0) {
+                    this.setState({
+                        status: 'nothing found',
+                        page: 1
+                    })
+                } else if (photos.length < 12 && photos.length > 0) {
+                    this.setState({
+                        galleryItems: [...photos],
+                        status: 'last page'
+                    })
+                } else {
+                    this.setState({
+                        galleryItems: [...photos],
+                        status: 'resolved',
+                        page: 1
+                    })
+                }  
+            } catch (error) {
+                this.setState({
+                    galleryItems: [],
+                    status: 'error',
+                })
+            }
         }
     }
 
@@ -51,21 +87,24 @@ class ImageGallery extends Component {
     }
 
     closeModal = () => {
-        this.setState(({ showModal }) => ({
+        this.setState(() => ({
             showModal: false,
-            imageInModal: ''
+            imageInModal: {}
         }));
     }
 
     handleImageClick = (e) => {
-        this.setState(({ showModal }) => ({
+        this.setState(() => ({
             showModal: true,
-            imageInModal: e.target.dataset.image
+            imageInModal: {
+                imageUrl: e.target.dataset.image,
+                altImageText: e.target.dataset.alt
+            }
         }))
     }
 
     render() {
-        const { status, galleryItems, showModal, imageInModal } = this.state
+        const { status, galleryItems, showModal, imageInModal: { imageUrl, altImageText } } = this.state
         
         if (status === 'idle') {
             return (
@@ -83,13 +122,43 @@ class ImageGallery extends Component {
             return (
             <>
                 <Gallery>
-                    {galleryItems.map(({id, largeImageURL, webformatURL }) => {
-                        return <ImageGalleryItem key={id} largeImage={largeImageURL} smallImage={webformatURL} onClick={this.handleImageClick} />
+                    {galleryItems.map(({id, largeImageURL, webformatURL, tags }) => {
+                        return <ImageGalleryItem key={id} largeImage={largeImageURL} smallImage={webformatURL} altText={tags} onClick={this.handleImageClick} />
                     })}
                 </Gallery>
-                    {showModal && <Modal onClose={this.closeModal}><img src={imageInModal} alt="" /></Modal>}
+                    {showModal && <Modal onClose={this.closeModal}>
+                        <Image src={imageUrl} alt={altImageText} />
+                    </Modal>}
                 <LoadMoreButton onClick={this.handleButtonClick} />
             </>
+            );
+        }
+
+        if (status === 'last page') {
+            return (
+            <>
+                <Gallery>
+                    {galleryItems.map(({id, largeImageURL, webformatURL, tags }) => {
+                        return <ImageGalleryItem key={id} largeImage={largeImageURL} smallImage={webformatURL} altText={tags} onClick={this.handleImageClick} />
+                    })}
+                </Gallery>
+                    {showModal && <Modal onClose={this.closeModal}>
+                        <Image src={imageUrl} alt={altImageText} />
+                    </Modal>}
+                <Heading>That's all we found for your request.</Heading>
+            </>
+            );
+        }
+
+        if (status === 'nothing found') {
+            return (
+                <Heading>Sorry, we couldn't find any matches...</Heading>
+            );
+        }
+
+        if (status === 'error') {
+            return (
+                <Heading>Sorry, something went wrong...</Heading>
             );
         }
     }
@@ -97,6 +166,6 @@ class ImageGallery extends Component {
 
 ImageGallery.propTypes = {
     searchPhrase: PropTypes.string.isRequired
-}
+};
 
 export default ImageGallery;

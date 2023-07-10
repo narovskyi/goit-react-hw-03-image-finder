@@ -17,3 +17,7 @@ export const Heading = styled.h1`
     text-align: center;
     color: #757575;
 `;
+
+export const Image = styled.img`
+    color: #ffffff;
+`;
